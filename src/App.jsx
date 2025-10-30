@@ -1,59 +1,60 @@
 import { useRef, useState } from 'react'
 import './App.css'
 import clsx from 'clsx';
+import {useForm} from 'react-hook-form'
 
 function App() {
-  const [formState, setFormState] = useState({
-    email: '',
-    password: '',
-    check: true
-  });
 
-  const [formVal, setFormVal] = useState({
-    email: false,
-    password: false,
-    check: false
-  });
+  const {register, handleSubmit, formState, watch} = useForm();
+  const {errors} = formState;
 
+  console.log('ciccio', watch());
 
-  const validators = {
-    email: value => value.length > 6 && value.includes('@'),
-    password: value => value.length > 8,
-    check: value => true
+  const pippo = (e) => {
+    console.log('submit', e);
   }
 
-  function submitHandler(e) {
-    e.preventDefault();
-    console.log('ciao', formState);
+  const rgx = /^\w+@\w+\.\w+$/gi;
+
+  const passwordValidator = (e) => {
+    const match = e.includes('ciao');
+    console.log(match);
+    return match ? 'il campo contiene \'ciao\'' : null;
+  }
+
+  function inputClass(fieldName) {
+    return clsx({'form-control': true, 'is-invalid': errors[fieldName]});
   }
 
 
-  function changeHandler(e) {
-    let {value, checked, name, type} = e.currentTarget;
-    if(type === 'checkbox') {
-      value = checked;
+  function strong() {
+    const value = watch('password').length;
+    if(value > 15) {
+      return 'fortissima';
+    } 
+
+    if(value > 7) {
+      return 'forte';
     }
-    console.log('change', value, name, type);
-    setFormState({...formState, [name]: value});
 
-    setFormVal({...formVal, [name]: validators[name](value)});
+    return 'debole';
   }
-
 
   return (
     <div className="row m-4">
-      <form onSubmit={submitHandler}>
+      <form onSubmit={handleSubmit(pippo)}>
         <div className="mb-3">
           <label htmlFor="exampleInputEmail1" className="form-label">Email address</label>
-          <input value={formState.email} name="email" onChange={changeHandler} type="text" className={clsx('form-control', !formVal.email && 'is-invalid')} id="exampleInputEmail1" aria-describedby="emailHelp"/>
+          <input {...register('email', {required: true, pattern: rgx})} className={inputClass('email')} type="text" id="exampleInputEmail1" aria-describedby="emailHelp"/>
           <div id="emailHelp" className="form-text">We'll never share your email with anyone else.</div>
         </div>
         <div className="mb-3">
           <label htmlFor="exampleInputPassword1" className="form-label">Password</label>
-          <input value={formState.password} name="password" onChange={changeHandler} type="password" className={clsx('form-control', !formVal.password && 'is-invalid')} id="exampleInputPassword1"/>
+          <input {...register('password', {required: true, minLength: 4, validate: passwordValidator})} className={inputClass('password')}  type="password" id="exampleInputPassword1"/>
+          <h3>{strong()}</h3>
         </div>
         <div className="mb-3 form-check">
-          <input checked={formState.check} name="check" onChange={changeHandler} type="checkbox" className="form-check-input" id="exampleCheck1"/>
+          <input type="checkbox" className="form-check-input" id="exampleCheck1"/>
           <label className="form-check-label" htmlFor="exampleCheck1">Check me out</label>
         </div>
         <button type="submit" className="btn btn-primary">Submit</button>
